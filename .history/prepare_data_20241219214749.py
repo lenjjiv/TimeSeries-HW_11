@@ -1,12 +1,6 @@
-import pandas as pd
-import numpy as np
-from typing import List, Tuple, Any, Dict
-import statsmodels.api as sm
-from statsmodels.graphics.gofplots import qqplot
-from statsmodels.stats.diagnostic import acorr_ljungbox, het_breuschpagan
-from scipy.stats import shapiro
-import matplotlib.pyplot as plt
 
+# @title create_calendar_features
+from typing import List
 
 def create_calendar_features(
         df: pd.DataFrame,
@@ -100,6 +94,8 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
         2004-01-01 02:00:00  13213.0
         ...
     """
+    import pandas as pd
+
     # 1. Load the data
     try:
         data = pd.read_csv(filepath)
@@ -135,6 +131,8 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
     return data
 
 # @title train_test_split_ts
+from typing import Tuple
+import pandas as pd
 
 def train_test_split_ts(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -170,6 +168,16 @@ def train_test_split_ts(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.Da
 
     return train, test
 
+
+# @title residuals_analysis
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.graphics.gofplots import qqplot
+from statsmodels.stats.diagnostic import acorr_ljungbox, het_breuschpagan
+from scipy.stats import shapiro
+import matplotlib.pyplot as plt
+from typing import Any, Dict
 
 def residuals_analysis(
     y_true: np.ndarray,

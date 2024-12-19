@@ -1,12 +1,6 @@
-import pandas as pd
-import numpy as np
-from typing import List, Tuple, Any, Dict
-import statsmodels.api as sm
-from statsmodels.graphics.gofplots import qqplot
-from statsmodels.stats.diagnostic import acorr_ljungbox, het_breuschpagan
-from scipy.stats import shapiro
-import matplotlib.pyplot as plt
 
+# @title create_calendar_features
+from typing import List
 
 def create_calendar_features(
         df: pd.DataFrame,
@@ -100,6 +94,8 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
         2004-01-01 02:00:00  13213.0
         ...
     """
+    import pandas as pd
+
     # 1. Load the data
     try:
         data = pd.read_csv(filepath)
@@ -135,6 +131,8 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
     return data
 
 # @title train_test_split_ts
+from typing import Tuple
+import pandas as pd
 
 def train_test_split_ts(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -170,6 +168,16 @@ def train_test_split_ts(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.Da
 
     return train, test
 
+
+# @title residuals_analysis
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.graphics.gofplots import qqplot
+from statsmodels.stats.diagnostic import acorr_ljungbox, het_breuschpagan
+from scipy.stats import shapiro
+import matplotlib.pyplot as plt
+from typing import Any, Dict
 
 def residuals_analysis(
     y_true: np.ndarray,
@@ -263,73 +271,3 @@ def residuals_analysis(
     }
 
     return results
-
-
-# @title explain_residuals_analysis
-def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> None:
-    """
-    Объясняет результаты анализа остатков модели на основе переданных статистик.
-
-    Args:
-        results (Dict[str, Any]): Словарь с результатами анализа остатков
-        alpha (int): Уровень значимости для t-тестов
-
-    Example:
-        >>> explain_residuals_analysis(results)
-    """
-    def to_float(value):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return None
-
-    # Получение статистик из результатов с преобразованием типов
-    residual_stats = results.get('residual_stats', {})
-    shapiro_pvalue = to_float(results.get('shapiro_pvalue'))
-    ljungbox_pvalue = to_float(results.get('ljungbox_pvalue'))
-    breuschpagan_pvalue = to_float(results.get('breuschpagan_pvalue'))
-
-    print()
-
-    # Базовая статистика остатков
-    print("1. Базовая статистика остатков:")
-    print(f"- Среднее значение: {residual_stats.get('mean', 'Нет данных'):.4f}")
-    print(f"- Стандартное отклонение: {residual_stats.get('std', 'Нет данных'):.4f}")
-    print(f"- Минимум: {residual_stats.get('min', 'Нет данных'):.4f}")
-    print(f"- Максимум: {residual_stats.get('max', 'Нет данных'):.4f}")
-
-    # Проверка на нормальность распределения
-    print("\n2. Проверка на нормальность распределения (Shapiro-Wilk тест):")
-    if shapiro_pvalue is not None:
-        if shapiro_pvalue < alpha:
-            print(f"- Остатки НЕ НОРМАЛЬНО распределены (p-value: {shapiro_pvalue:.4f}).")
-            print("  Это может указывать на то, что модель не идеально описывает данные.")
-        else:
-            print(f"- Остатки НОРМАЛЬНО распределены (p-value: {shapiro_pvalue:.4f}).")
-            print("  Это хороший признак, остатки распределены случайно.")
-    else:
-        print("- Данные для теста отсутствуют.")
-
-    # Проверка на автокорреляцию (Ljung-Box тест)
-    print("\n3. Проверка на автокорреляцию (Ljung-Box тест):")
-    if ljungbox_pvalue is not None:
-        if ljungbox_pvalue < alpha:
-            print(f"- Остатки имеют автокорреляцию (p-value: {ljungbox_pvalue:.4f}).")
-            print("  Модель могла не учесть важные временные зависимости.")
-        else:
-            print(f"- Остатки НЕ имеют автокорреляции (p-value: {ljungbox_pvalue:.4f}).")
-            print("  Хороший признак: модель учла временные зависимости.")
-    else:
-        print("- Данные для теста отсутствуют.")
-
-    # Проверка гомоскедастичности (Breusch-Pagan тест)
-    print("\n4. Проверка на гомоскедастичность (Breusch-Pagan тест):")
-    if breuschpagan_pvalue is not None:
-        if breuschpagan_pvalue < alpha:
-            print(f"- Остатки НЕ гомоскедастичны (p-value: {breuschpagan_pvalue:.4f}).")
-            print("  Это может означать, что дисперсия остатков изменяется со временем.")
-        else:
-            print(f"- Остатки гомоскедастичны (p-value: {breuschpagan_pvalue:.4f}).")
-            print("  Это хороший признак: дисперсия остатков постоянна.")
-    else:
-        print("- Данные для теста отсутствуют.")

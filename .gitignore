@@ -1,0 +1,9 @@
+.history/
+node_modules/
+.idea/
+.vscode/
+.DS_Store/
+.env
+.env.local
+.mypy_cache/
+.venv/

@@ -8,67 +8,6 @@ from scipy.stats import shapiro
 import matplotlib.pyplot as plt
 
 
-def create_calendar_features(
-        df: pd.DataFrame,
-        holidays: List[str] = [
-            "2024-01-01",
-            "2024-07-04",
-            "2024-12-25",
-        ]
-) -> pd.DataFrame:
-    """
-    Создает календарные признаки на основе временного индекса DataFrame.
-
-    Создает следующие признаки:
-    - час дня (0-23)
-    - день недели (0-6)
-    - месяц (1-12)
-    - день месяца (1-31)
-    - квартал (1-4)
-    - признак выходного дня
-    - признак праздничного дня (на основе пользовательского списка праздников)
-    - сезонные циклические признаки (sin и cos для часа, дня недели и месяца)
-
-    Args:
-        df (pd.DataFrame): DataFrame с datetime индексом
-        holidays (list): Список дат праздников в формате 'YYYY-MM-DD'
-
-    Returns:
-        pd.DataFrame: DataFrame с добавленными календарными признаками
-
-    Example:
-        >>> df = create_calendar_features(df)
-        >>> df.columns
-        ['AEP_MW', 'hour', 'day_of_week', 'month', 'day_of_month',...]
-    """
-    if not isinstance(df.index, pd.DatetimeIndex):
-        raise ValueError("DataFrame должен иметь datetime индекс.")
-
-    # Основные календарные признаки
-    df['hour'] = df.index.hour
-    df['day_of_week'] = df.index.dayofweek
-    df['month'] = df.index.month
-    df['day_of_month'] = df.index.day
-    df['quarter'] = df.index.quarter
-
-    # Признак выходного дня (суббота и воскресенье)
-    df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
-
-    # Обработка праздников
-    holidays = pd.to_datetime(holidays)
-    df['is_holiday'] = df.index.isin(holidays).astype(int)
-
-    # Циклические признаки (час, день недели, месяц)
-    df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
-    df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
-    df['day_of_week_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
-    df['day_of_week_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
-    df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
-    df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
-
-    return df
-
-# @title load_and_prepare_data
 def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
     """
     Загружает и подготавливает временной ряд из CSV файла для дальнейшего анализа.
@@ -110,7 +49,7 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
     if date_column not in data.columns:
         raise ValueError(f"Date column '{date_column}' not found in the dataset.")
 
-    data[date_column] = pd.to_datetime(data[date_column], errors='coerce')
+    data[date_column] = pd.to_datetime(data[date_column], errors="coerce")
 
     if data[date_column].isnull().any():
         raise ValueError("Some date values could not be converted to datetime.")
@@ -120,7 +59,7 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
 
     # 4. Handle missing values
     if data.isnull().any().any():
-        data = data.fillna(method='ffill').fillna(method='bfill')
+        data = data.fillna(method="ffill").fillna(method="bfill")
         if data.isnull().any().any():
             raise ValueError("Missing values remain after forward/backward filling.")
 
@@ -134,9 +73,72 @@ def load_and_prepare_data(filepath: str, date_column: str) -> pd.DataFrame:
 
     return data
 
-# @title train_test_split_ts
 
-def train_test_split_ts(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def create_calendar_features(
+    df: pd.DataFrame,
+    holidays: List[str] = [
+        "2024-01-01",
+        "2024-07-04",
+        "2024-12-25",
+    ],
+) -> pd.DataFrame:
+    """
+    Создает календарные признаки на основе временного индекса DataFrame.
+
+    Создает следующие признаки:
+    - час дня (0-23)
+    - день недели (0-6)
+    - месяц (1-12)
+    - день месяца (1-31)
+    - квартал (1-4)
+    - признак выходного дня
+    - признак праздничного дня (на основе пользовательского списка праздников)
+    - сезонные циклические признаки (sin и cos для часа, дня недели и месяца)
+
+    Args:
+        df (pd.DataFrame): DataFrame с datetime индексом
+        holidays (list): Список дат праздников в формате 'YYYY-MM-DD'
+
+    Returns:
+        pd.DataFrame: DataFrame с добавленными календарными признаками
+
+    Example:
+        >>> df = create_calendar_features(df)
+        >>> df.columns
+        ['AEP_MW', 'hour', 'day_of_week', 'month', 'day_of_month',...]
+    """
+    if not isinstance(df.index, pd.DatetimeIndex):
+        raise ValueError("DataFrame должен иметь datetime индекс.")
+
+    # Основные календарные признаки
+    df["hour"] = df.index.hour
+    df["day_of_week"] = df.index.dayofweek
+    df["month"] = df.index.month
+    df["day_of_month"] = df.index.day
+    df["quarter"] = df.index.quarter
+
+    # Признак выходного дня (суббота и воскресенье)
+    df["is_weekend"] = df["day_of_week"].isin([5, 6]).astype(int)
+
+    # Обработка праздников
+    holidays = pd.to_datetime(holidays)
+    df["is_holiday"] = df.index.isin(holidays).astype(int)
+
+    # Циклические признаки (час, день недели, месяц)
+    df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+    df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+    df["day_of_week_sin"] = np.sin(2 * np.pi * df["day_of_week"] / 7)
+    df["day_of_week_cos"] = np.cos(2 * np.pi * df["day_of_week"] / 7)
+    df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
+    df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
+
+    return df
+
+
+def train_test_split_ts(
+    df: pd.DataFrame, 
+    test_size: float = 0.2
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Разделяет временной ряд на обучающую и тестовую выборки с сохранением временной структуры.
     - Сохраняет временную последовательность
@@ -172,8 +174,8 @@ def train_test_split_ts(df: pd.DataFrame, test_size: float = 0.2) -> Tuple[pd.Da
 
 
 def residuals_analysis(
-    y_true: np.ndarray,
-    y_pred: np.ndarray,
+    y_true: np.ndarray, 
+    y_pred: np.ndarray, 
     dates: pd.DatetimeIndex
 ) -> Dict[str, Any]:
     """
@@ -206,10 +208,10 @@ def residuals_analysis(
 
     # Базовая статистика остатков
     residual_stats = {
-        'mean': np.mean(residuals),
-        'std': np.std(residuals),
-        'min': np.min(residuals),
-        'max': np.max(residuals)
+        "mean": np.mean(residuals),
+        "std": np.std(residuals),
+        "min": np.min(residuals),
+        "max": np.max(residuals),
     }
 
     # Тест на нормальность (Shapiro-Wilk test)
@@ -218,8 +220,8 @@ def residuals_analysis(
     # Тест на автокорреляцию (Ljung-Box test)
     max_lag = min(len(residuals) // 2, 20)  # Лаги: не больше половины длины данных
     lb_test = acorr_ljungbox(residuals, lags=max_lag, return_df=True)
-    lb_stat = lb_test['lb_stat'].iloc[-1]  # Значение статистики для максимального лага
-    lb_pvalue = lb_test['lb_pvalue'].iloc[-1]  # Значение p-value для максимального лага
+    lb_stat = lb_test["lb_stat"].iloc[-1]  # Значение статистики для максимального лага
+    lb_pvalue = lb_test["lb_pvalue"].iloc[-1]  # Значение p-value для максимального лага
 
     # Тест на гомоскедастичность (Breusch-Pagan test)
     exog = sm.add_constant(np.arange(len(residuals)))
@@ -230,21 +232,21 @@ def residuals_analysis(
 
     # QQ-plot
     plt.subplot(2, 2, 1)
-    qqplot(residuals, line='s', ax=plt.gca())
-    plt.title('QQ-plot of Residuals')
+    qqplot(residuals, line="s", ax=plt.gca())
+    plt.title("QQ-plot of Residuals")
 
     # ACF Plot
     plt.subplot(2, 2, 2)
     sm.graphics.tsa.plot_acf(residuals, lags=min(20, len(residuals) - 1), ax=plt.gca())
-    plt.title('ACF of Residuals')
+    plt.title("ACF of Residuals")
 
     # Временной ряд остатков
     plt.subplot(2, 1, 2)
-    plt.plot(dates, residuals, label='Residuals', marker='o')
-    plt.axhline(0, linestyle='--', color='red', alpha=0.7)
-    plt.title('Residuals Over Time')
-    plt.xlabel('Date')
-    plt.ylabel('Residuals')
+    plt.plot(dates, residuals, label="Residuals", marker="o")
+    plt.axhline(0, linestyle="--", color="red", alpha=0.7)
+    plt.title("Residuals Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Residuals")
     plt.xticks(rotation=45)
     plt.legend()
 
@@ -253,20 +255,23 @@ def residuals_analysis(
 
     # Результаты анализа
     results = {
-        'residual_stats': residual_stats,
-        'shapiro_stat': shapiro_stat,
-        'shapiro_pvalue': shapiro_pvalue,
-        'ljungbox_stat': lb_stat,
-        'ljungbox_pvalue': lb_pvalue,
-        'breuschpagan_stat': bp_stat,
-        'breuschpagan_pvalue': bp_pvalue
+        "residual_stats": residual_stats,
+        "shapiro_stat": shapiro_stat,
+        "shapiro_pvalue": shapiro_pvalue,
+        "ljungbox_stat": lb_stat,
+        "ljungbox_pvalue": lb_pvalue,
+        "breuschpagan_stat": bp_stat,
+        "breuschpagan_pvalue": bp_pvalue,
     }
 
     return results
 
 
 # @title explain_residuals_analysis
-def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> None:
+def explain_residuals_analysis(
+        results: Dict[str, Any], 
+        alpha: int = 0.05
+    ) -> None:
     """
     Объясняет результаты анализа остатков модели на основе переданных статистик.
 
@@ -277,6 +282,7 @@ def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> No
     Example:
         >>> explain_residuals_analysis(results)
     """
+
     def to_float(value):
         try:
             return float(value)
@@ -284,10 +290,10 @@ def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> No
             return None
 
     # Получение статистик из результатов с преобразованием типов
-    residual_stats = results.get('residual_stats', {})
-    shapiro_pvalue = to_float(results.get('shapiro_pvalue'))
-    ljungbox_pvalue = to_float(results.get('ljungbox_pvalue'))
-    breuschpagan_pvalue = to_float(results.get('breuschpagan_pvalue'))
+    residual_stats = results.get("residual_stats", {})
+    shapiro_pvalue = to_float(results.get("shapiro_pvalue"))
+    ljungbox_pvalue = to_float(results.get("ljungbox_pvalue"))
+    breuschpagan_pvalue = to_float(results.get("breuschpagan_pvalue"))
 
     print()
 
@@ -302,8 +308,12 @@ def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> No
     print("\n2. Проверка на нормальность распределения (Shapiro-Wilk тест):")
     if shapiro_pvalue is not None:
         if shapiro_pvalue < alpha:
-            print(f"- Остатки НЕ НОРМАЛЬНО распределены (p-value: {shapiro_pvalue:.4f}).")
-            print("  Это может указывать на то, что модель не идеально описывает данные.")
+            print(
+                f"- Остатки НЕ НОРМАЛЬНО распределены (p-value: {shapiro_pvalue:.4f})."
+            )
+            print(
+                "  Это может указывать на то, что модель не идеально описывает данные."
+            )
         else:
             print(f"- Остатки НОРМАЛЬНО распределены (p-value: {shapiro_pvalue:.4f}).")
             print("  Это хороший признак, остатки распределены случайно.")
@@ -317,7 +327,9 @@ def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> No
             print(f"- Остатки имеют автокорреляцию (p-value: {ljungbox_pvalue:.4f}).")
             print("  Модель могла не учесть важные временные зависимости.")
         else:
-            print(f"- Остатки НЕ имеют автокорреляции (p-value: {ljungbox_pvalue:.4f}).")
+            print(
+                f"- Остатки НЕ имеют автокорреляции (p-value: {ljungbox_pvalue:.4f})."
+            )
             print("  Хороший признак: модель учла временные зависимости.")
     else:
         print("- Данные для теста отсутствуют.")
@@ -327,7 +339,9 @@ def explain_residuals_analysis(results: Dict[str, Any], alpha: int = 0.05) -> No
     if breuschpagan_pvalue is not None:
         if breuschpagan_pvalue < alpha:
             print(f"- Остатки НЕ гомоскедастичны (p-value: {breuschpagan_pvalue:.4f}).")
-            print("  Это может означать, что дисперсия остатков изменяется со временем.")
+            print(
+                "  Это может означать, что дисперсия остатков изменяется со временем."
+            )
         else:
             print(f"- Остатки гомоскедастичны (p-value: {breuschpagan_pvalue:.4f}).")
             print("  Это хороший признак: дисперсия остатков постоянна.")
